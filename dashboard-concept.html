@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DTC Ativos Dashboard Concept</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f5f3ee;
+        --panel: rgba(255, 255, 255, 0.9);
+        --panel-strong: #ffffff;
+        --ink: #111111;
+        --muted: #5f5f5f;
+        --line: rgba(17, 17, 17, 0.08);
+        --line-strong: rgba(17, 17, 17, 0.16);
+        --accent: #ffd31c;
+        --accent-deep: #d9b317;
+        --accent-soft: #fff3c1;
+        --shadow: 0 24px 80px rgba(17, 17, 17, 0.08);
+        --radius-xl: 28px;
+        --radius-lg: 20px;
+        --radius-md: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Manrope", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(255, 211, 28, 0.28), transparent 30%),
+          radial-gradient(circle at right 10%, rgba(24, 91, 107, 0.12), transparent 20%),
+          linear-gradient(180deg, #f8f6f1 0%, var(--bg) 100%);
+        color: var(--ink);
+      }
+
+      .shell {
+        width: min(1440px, calc(100vw - 40px));
+        margin: 24px auto 48px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        gap: 20px;
+        padding: 32px;
+        border: 1px solid rgba(17, 17, 17, 0.06);
+        border-radius: 36px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.72)),
+          linear-gradient(135deg, rgba(255, 211, 28, 0.16), transparent 45%);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(20px);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -8% -35% auto;
+        width: 320px;
+        height: 320px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(255, 211, 28, 0.6), rgba(255, 211, 28, 0));
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: rgba(17, 17, 17, 0.04);
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 6px rgba(255, 211, 28, 0.18);
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      h1 {
+        margin-top: 18px;
+        max-width: 12ch;
+        font-size: clamp(1.6rem, 2.4vw, 2.5rem);
+        line-height: 1.05;
+      }
+
+      .hero p {
+        max-width: 62ch;
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        align-content: start;
+      }
+
+      .hero-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+        gap: 22px;
+        align-items: start;
+      }
+
+      .hero-controls {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .filter-panel {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 8px;
+        width: min(360px, 100%);
+      }
+
+      .title-block {
+        display: grid;
+        justify-items: start;
+        align-content: center;
+        min-height: 150px;
+        gap: 14px;
+      }
+
+      .title-lockup {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .title-block .eyebrow {
+        font-size: 20px;
+        letter-spacing: 0.06em;
+        padding: 14px 20px;
+      }
+
+      .title-block .eyebrow::before {
+        width: 12px;
+        height: 12px;
+      }
+
+      .brand-logo {
+        height: 52px;
+        width: auto;
+        display: block;
+      }
+
+      .filter-panel label {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .filter-panel select {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line-strong);
+        background: rgba(255, 255, 255, 0.92);
+        font: inherit;
+        color: var(--ink);
+      }
+
+      .filter-panel input {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid var(--line-strong);
+        background: rgba(255, 255, 255, 0.92);
+        font: inherit;
+        color: var(--ink);
+      }
+
+      .hero-stats .pulse-card.featured {
+        background:
+          linear-gradient(160deg, rgba(17, 17, 17, 0.98), rgba(17, 17, 17, 0.88)),
+          linear-gradient(135deg, rgba(255, 211, 28, 0.3), transparent 55%);
+        color: #ffffff;
+        border-color: rgba(255, 211, 28, 0.28);
+        box-shadow: 0 24px 60px rgba(17, 17, 17, 0.22);
+      }
+
+      .hero-stats .pulse-card.featured small,
+      .hero-stats .pulse-card.featured .meta {
+        color: rgba(255, 255, 255, 0.74);
+      }
+
+      .hero-stats .pulse-card.featured strong {
+        color: var(--accent);
+      }
+
+      .hero-stats .pulse-card.featured .hero-caption {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .pulse-card,
+      .card {
+        padding: 22px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--line);
+        background: var(--panel);
+        backdrop-filter: blur(12px);
+      }
+
+      .pulse-card strong {
+        display: block;
+        margin-top: 18px;
+        font-size: clamp(1.45rem, 2.4vw, 2.15rem);
+        line-height: 1;
+      }
+
+      .pulse-card small,
+      .meta,
+      .muted {
+        color: var(--muted);
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 22px;
+      }
+
+      .span-12 { grid-column: span 12; }
+      .span-8 { grid-column: span 8; }
+      .span-7 { grid-column: span 7; }
+      .span-6 { grid-column: span 6; }
+      .span-5 { grid-column: span 5; }
+      .span-4 { grid-column: span 4; }
+      .span-3 { grid-column: span 3; }
+
+      .section-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .section-title p {
+        margin: 8px 0 0;
+        max-width: 52ch;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .kpi {
+        position: relative;
+        overflow: hidden;
+        min-height: 160px;
+      }
+
+      .kpi::after {
+        content: "";
+        position: absolute;
+        inset: auto -28px -28px auto;
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(255, 211, 28, 0.42), rgba(255, 211, 28, 0));
+      }
+
+      .kpi-label {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: rgba(17, 17, 17, 0.05);
+      }
+
+      .kpi-value {
+        margin-top: 20px;
+        font-size: clamp(1.45rem, 2.2vw, 2.2rem);
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .kpi-note {
+        margin-top: 10px;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 18px;
+      }
+
+      .bar-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px 14px;
+        align-items: center;
+      }
+
+      .bar-row strong {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 0.95rem;
+      }
+
+      .bar-track {
+        position: relative;
+        width: 100%;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(17, 17, 17, 0.08);
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), #ffe577);
+      }
+
+      .bar-value {
+        min-width: 66px;
+        text-align: right;
+        font-weight: 800;
+      }
+
+      .story-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 18px;
+      }
+
+      .funnel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .funnel-step {
+        position: relative;
+        overflow: hidden;
+        padding: 18px 20px;
+        border-radius: 18px;
+        background: linear-gradient(90deg, rgba(17, 17, 17, 0.96), rgba(17, 17, 17, 0.84));
+        color: #fff;
+      }
+
+      .funnel-step:nth-child(2) {
+        margin-left: 24px;
+      }
+
+      .funnel-step:nth-child(3) {
+        margin-left: 48px;
+      }
+
+      .funnel-step::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 5px;
+        background: var(--accent);
+      }
+
+      .funnel-value {
+        display: block;
+        margin-top: 10px;
+        font-size: 1.4rem;
+        font-weight: 800;
+      }
+
+      .highlight-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .highlight {
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(17, 17, 17, 0.08);
+        background: linear-gradient(180deg, rgba(255, 243, 193, 0.85), rgba(255, 255, 255, 0.95));
+        line-height: 1.55;
+      }
+
+      .table-card {
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 14px 0;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      td {
+        font-size: 0.95rem;
+      }
+
+      .rate-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 72px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        font-weight: 800;
+      }
+
+      .footer-note {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        margin-top: 18px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .quality-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .quality-item {
+        padding: 18px;
+        border-radius: 18px;
+        background: rgba(17, 17, 17, 0.03);
+      }
+
+      .quality-item strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 1.9rem;
+      }
+
+      .warning-banner {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(217, 179, 23, 0.45);
+        background: linear-gradient(180deg, rgba(255, 243, 193, 0.95), rgba(255, 255, 255, 0.92));
+        line-height: 1.55;
+      }
+
+      @media (max-width: 1180px) {
+        .story-grid,
+        .split,
+        .kpi-grid,
+        .quality-grid,
+        .hero-stats {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-head {
+          grid-template-columns: 1fr;
+        }
+
+        .dashboard > * {
+          grid-column: span 12;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .shell {
+          width: min(100vw - 20px, 1440px);
+          margin-top: 10px;
+        }
+
+        .hero {
+          padding: 22px;
+          border-radius: 28px;
+        }
+
+        .pulse-card,
+        .card {
+          padding: 18px;
+        }
+
+        .funnel-step:nth-child(2),
+        .funnel-step:nth-child(3) {
+          margin-left: 0;
+        }
+
+        .footer-note {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-head">
+          <div class="title-block">
+            <div class="title-lockup">
+              <img
+                class="brand-logo"
+                src="https://manutencao.gobrax.com.br/imgs/gobrax.svg"
+                alt="Gobrax"
+              />
+              <span class="eyebrow">DTC Ativos x Frota Gobrax V3</span>
+            </div>
+          </div>
+          <div class="filter-panel">
+            <label for="customer-filter">Filtro por cliente</label>
+            <input id="customer-search" type="search" placeholder="Buscar cliente" />
+            <select id="customer-filter"></select>
+          </div>
+        </div>
+        <div class="hero-controls">
+          <div class="hero-stats" id="hero-stats"></div>
+        </div>
+      </section>
+
+      <section class="dashboard">
+        <div class="card span-12" id="section-pulse">
+          <div class="section-title">
+            <div>
+              <h2>Pulse Da Operacao</h2>
+              <p>
+                Primeira dobra com numeros de impacto, narrativa executiva e leitura
+                imediata de cobertura.
+              </p>
+            </div>
+          </div>
+          <div class="kpi-grid" id="kpi-grid"></div>
+          <div class="warning-banner" id="matching-warning" hidden></div>
+        </div>
+
+        <div class="card span-5" id="section-coverage">
+          <div class="section-title">
+            <div>
+              <h2>Leitura De Cobertura</h2>
+              <p>
+                O funil mostra a relacao entre frota total, base DTC e match confirmado,
+                facilitando a leitura da cobertura atual.
+              </p>
+            </div>
+          </div>
+          <div class="story-grid">
+            <div class="funnel" id="coverage-funnel"></div>
+            <div class="highlight-list" id="highlights"></div>
+          </div>
+        </div>
+
+        <div class="card span-7" id="section-panorama">
+          <div class="section-title">
+            <div>
+              <h2>Panorama Da Frota</h2>
+              <p>
+                Marcas e modelos que sustentam a operacao. O foco visual valoriza o
+                volume e ajuda a perceber concentracao de ativos.
+              </p>
+            </div>
+          </div>
+          <div class="split">
+            <div>
+              <h3>Top Montadoras</h3>
+              <div class="bar-list" id="top-brands"></div>
+            </div>
+            <div>
+              <h3>Top Modelos</h3>
+              <div class="bar-list" id="top-models"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card table-card span-6" id="section-opportunity">
+          <div class="section-title">
+            <div>
+              <h2>Ranking De Oportunidade</h2>
+              <p>
+                Um score simples que combina gap absoluto com baixa cobertura para
+                destacar onde o ataque tende a gerar mais retorno.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Gap</th>
+                <th>Cobertura</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody id="table-opportunity"></tbody>
+          </table>
+        </div>
+
+        <div class="card span-6" id="section-pareto">
+          <div class="section-title">
+            <div>
+              <h2>Pareto Do Gap</h2>
+              <p>
+                Mostra em quantos clientes esta concentrada a maior parte do gap total.
+              </p>
+            </div>
+          </div>
+          <div class="highlight-list" id="pareto-list"></div>
+        </div>
+
+        <div class="card table-card span-6" id="section-quick-wins">
+          <div class="section-title">
+            <div>
+              <h2>Ganhos Rapidos</h2>
+              <p>
+                Contas com frota relevante e cobertura intermediaria, mais proximas de
+                fechar o gap com esforco menor.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Gap</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-quick-wins"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-6" id="section-critical">
+          <div class="section-title">
+            <div>
+              <h2>Casos Criticos</h2>
+              <p>
+                Contas grandes com cobertura muito baixa, onde existe risco e muita
+                oportunidade concentrada.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Gap</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-critical-cases"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-6" id="section-customer-coverage">
+          <div class="section-title">
+            <div>
+              <h2>Clientes Com Melhor Cobertura</h2>
+              <p>
+                Ranking das contas com melhor desempenho de match entre frota e DTC,
+                considerando clientes com volume minimo relevante.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Frota</th>
+                <th>Match</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-customer-coverage"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-6" id="section-customer-gap">
+          <div class="section-title">
+            <div>
+              <h2>Clientes Com Maior Gap</h2>
+              <p>
+                Ranking das contas com maior volume ainda sem match, bom para priorizacao
+                comercial e operacional.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Frota</th>
+                <th>Gap</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-customer-gap"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-8" id="section-largest">
+          <div class="section-title">
+            <div>
+              <h2>Maiores Frotas Da Base</h2>
+              <p>
+                Ranking para identificar contas com maior impacto operacional e orientar
+                recortes executivos do dashboard.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Frota</th>
+                <th>Participacao</th>
+              </tr>
+            </thead>
+            <tbody id="table-customers"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-4" id="section-concentration">
+          <div class="section-title">
+            <div>
+              <h2>Concentracao Da Carteira</h2>
+              <p>
+                Um resumo rapido para entender o peso das maiores contas e o desenho da base.
+              </p>
+            </div>
+          </div>
+          <div class="highlight-list" id="concentration-list"></div>
+        </div>
+
+        <div class="card table-card span-6" id="section-brand-coverage">
+          <div class="section-title">
+            <div>
+              <h2>Cobertura Por Marca</h2>
+              <p>
+                Leitura de cobertura e gap absoluto por montadora para identificar onde
+                a carteira esta mais ou menos conectada.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Marca</th>
+                <th>Frota</th>
+                <th>Gap</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-brand-coverage"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-6" id="section-device-coverage">
+          <div class="section-title">
+            <div>
+              <h2>Match Por Device</h2>
+              <p>
+                Compara o desempenho de cobertura entre os fabricantes de device
+                restantes na base filtrada.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Frota</th>
+                <th>Gap Ativavel</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-device-coverage"></tbody>
+          </table>
+        </div>
+
+        <div class="card span-6" id="section-activation">
+          <div class="section-title">
+            <div>
+              <h2>Leitura De Ativacao DTC</h2>
+              <p>
+                Considera a regra atual de negocio: devices <strong>rp4</strong> nao
+                possuem suporte para ativacao DTC.
+              </p>
+            </div>
+          </div>
+          <div class="highlight-list" id="activation-list"></div>
+        </div>
+
+        <div class="card table-card span-12" id="section-customer-brand">
+          <div class="section-title">
+            <div>
+              <h2>Pockets Cliente + Marca</h2>
+              <p>
+                Bolsões de oportunidade e sucesso por conta e montadora, úteis para
+                leitura mais tática da carteira.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Marca</th>
+                <th>Frota</th>
+                <th>Match</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-customer-brand"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-6" id="section-model-gap">
+          <div class="section-title">
+            <div>
+              <h2>Modelos Com Maior Gap</h2>
+              <p>
+                Mostra os modelos que concentram mais veiculos ainda fora do match.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Modelo</th>
+                <th>Frota</th>
+                <th>Gap</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-model-gap"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-6" id="section-buckets">
+          <div class="section-title">
+            <div>
+              <h2>Cobertura Por Faixa De Frota</h2>
+              <p>
+                Resume como a cobertura se comporta entre contas pequenas, medias e grandes.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Faixa</th>
+                <th>Clientes</th>
+                <th>Frota</th>
+                <th>Match</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-buckets"></tbody>
+          </table>
+        </div>
+
+        <div class="card span-6" id="section-mix-device">
+          <div class="section-title">
+            <div>
+              <h2>Mix De Device</h2>
+              <p>
+                Uma leitura enxuta da composicao de devices ativos na base filtrada,
+                suficiente para contexto sem puxar o painel para uma camada tecnica demais.
+              </p>
+            </div>
+          </div>
+          <div>
+            <h3>Modelo De Device</h3>
+            <div class="bar-list" id="device-brands"></div>
+          </div>
+        </div>
+
+        <div class="card table-card span-6" id="section-customer-low">
+          <div class="section-title">
+            <div>
+              <h2>Clientes Prioritarios</h2>
+              <p>
+                Contas com frota relevante e baixa cobertura para orientar expansao,
+                revisao comercial ou checagem de integracao.
+              </p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Frota</th>
+                <th>Match</th>
+                <th>Cobertura</th>
+              </tr>
+            </thead>
+            <tbody id="table-customer-low"></tbody>
+          </table>
+        </div>
+
+        <div class="card table-card span-6" id="section-notes">
+          <div class="section-title">
+            <div>
+              <h2>Notas Do Painel</h2>
+              <p>
+                Contexto minimo para leitura executiva dos numeros e do criterio de cruzamento.
+              </p>
+            </div>
+          </div>
+          <div class="highlight-list" id="notes-list"></div>
+          <div class="footer-note">
+            <span id="date-range"></span>
+            <span id="generated-at"></span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./dashboard_data.js"></script>
+    <script>
+      const data = window.DASHBOARD_DATA;
+      let activeCustomer = "";
+      let customerSearchTerm = "";
+
+      function formatNumber(value) {
+        return new Intl.NumberFormat("pt-BR").format(value);
+      }
+
+      function formatRate(value) {
+        if (value === null || value === undefined) {
+          return "indisponivel";
+        }
+        return `${value.toFixed(2).replace(".", ",")}%`;
+      }
+
+      function formatMonthLabel(value) {
+        const [year, month] = value.split("-");
+        const date = new Date(Number(year), Number(month) - 1, 1);
+        return new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit" }).format(date);
+      }
+
+      function formatDateTime(value) {
+        return new Intl.DateTimeFormat("pt-BR", {
+          dateStyle: "short",
+          timeStyle: "short",
+        }).format(new Date(value));
+      }
+
+      function currentView() {
+        return activeCustomer ? data.customer_views[activeCustomer] : null;
+      }
+
+      function isCustomerMode() {
+        return !!activeCustomer;
+      }
+
+      function renderFilter() {
+        const select = document.getElementById("customer-filter");
+        const search = document.getElementById("customer-search");
+        const filteredCustomers = data.filters.customers.filter((customer) =>
+          customer.toLowerCase().includes(customerSearchTerm.toLowerCase())
+        );
+        const options = ['<option value="">Todos os clientes</option>']
+          .concat(filteredCustomers.map((customer) => `<option value="${customer}">${customer}</option>`));
+        select.innerHTML = options.join("");
+        select.value = filteredCustomers.includes(activeCustomer) ? activeCustomer : "";
+
+        search.value = customerSearchTerm;
+        search.oninput = (event) => {
+          customerSearchTerm = event.target.value;
+          renderFilter();
+        };
+
+        select.onchange = (event) => {
+          activeCustomer = event.target.value;
+          renderDashboard();
+        };
+      }
+
+      function renderHero() {
+        const view = currentView();
+        const items = isCustomerMode()
+          ? [
+              {
+                label: "Cobertura do Cliente",
+                value: formatRate(view.kpis.coverage_rate),
+                featured: true,
+                caption: `${formatNumber(view.kpis.fleet_total)} veiculos na conta filtrada`,
+              },
+              {
+                label: "Veiculos Com Match",
+                value: formatNumber(view.kpis.matched_total),
+                featured: true,
+                caption: `match real do cliente ${activeCustomer}`,
+              },
+              {
+                label: "Marcas no Cliente",
+                value: formatNumber(view.kpis.brand_total),
+              },
+              {
+                label: "Cliente Selecionado",
+                value: activeCustomer,
+              },
+            ]
+          : [
+              {
+                label: "Cobertura Atual",
+                value: formatRate(data.kpis.coverage_rate),
+                featured: true,
+                caption: `${formatNumber(data.validation.validated_scope_total)} veiculos (${formatRate(data.validation.validated_scope_rate)}) estao em faixa validavel para o cruzamento atual`,
+              },
+              {
+                label: "Veiculos Com Match",
+                value: formatNumber(data.validation.validated_match_total),
+                featured: true,
+                caption: "ativos conectados entre a base de veiculos e a base DTC",
+              },
+              {
+                label: "Clientes Na Base",
+                value: formatNumber(data.kpis.customer_total),
+              },
+              {
+                label: "Top 10 Contas",
+                value: formatRate(data.kpis.top_10_customer_concentration),
+              },
+            ];
+
+        document.getElementById("hero-stats").innerHTML = items
+          .map(
+            (item) => `
+              <article class="pulse-card ${item.featured ? "featured" : ""}">
+                <small>${item.label}</small>
+                <strong>${item.value}</strong>
+                ${item.caption ? `<div class="hero-caption">${item.caption}</div>` : ""}
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function renderKpis() {
+        const view = currentView();
+        const cards = isCustomerMode()
+          ? [
+              {
+                label: "Frota do Cliente",
+                value: formatNumber(view.kpis.fleet_total),
+                note: "universo total do cliente selecionado",
+              },
+              {
+                label: "Match Confirmado",
+                value: formatNumber(view.kpis.matched_total),
+                note: "cruzamento real entre imei e device_identification",
+              },
+              {
+                label: "Gap do Cliente",
+                value: formatNumber(view.kpis.fleet_total - view.kpis.matched_total),
+                note: "veiculos ainda fora do match nessa conta",
+              },
+              {
+                label: "Cobertura Atual",
+                value: formatRate(view.kpis.coverage_rate),
+                note: "percentual de match no cliente filtrado",
+              },
+            ]
+          : [
+              {
+                label: "Frota Total",
+                value: formatNumber(data.kpis.fleet_total),
+                note: "universo completo de veiculos e contas",
+              },
+              {
+                label: "Dispositivos DTC",
+                value: formatNumber(data.kpis.dtc_total),
+                note: "base tecnica hoje habilitada",
+              },
+              {
+                label: "Match Confirmado",
+                value: formatNumber(data.validation.validated_match_total),
+                note: "cruzamento real entre imei e device_identification",
+              },
+              {
+                label: "Concentracao Top 10",
+                value: formatRate(data.kpis.top_10_customer_concentration),
+                note: "participacao das dez maiores contas na frota total",
+              },
+            ];
+
+        document.getElementById("kpi-grid").innerHTML = cards
+          .map(
+            (card) => `
+              <article class="card kpi">
+                <span class="kpi-label">${card.label}</span>
+                <div class="kpi-value">${card.value}</div>
+                <div class="kpi-note">${card.note}</div>
+              </article>
+            `
+          )
+          .join("");
+
+        const warning = document.getElementById("matching-warning");
+        if (isCustomerMode()) {
+          warning.hidden = false;
+          warning.innerHTML = `<strong>Filtro por cliente ativo.</strong><br>O painel esta exibindo somente os dados de <strong>${activeCustomer}</strong>. Os blocos comparativos entre clientes foram ocultados para manter a leitura focada.`;
+        } else if (!data.matching.reliable) {
+          warning.hidden = false;
+          warning.innerHTML = `<strong>Match por IMEI x device_identification.</strong><br>${data.matching.message} No cruzamento direto, o painel encontrou ${formatNumber(data.matching.direct_match_total)} match exato e ${formatNumber(data.matching.normalized_match_total)} apos normalizacao. Existe overlap em ${formatNumber(data.matching.signature_overlap_total)} linhas por assinatura cientifica, mas ele e ambiguo porque a exportacao colapsou muitos IMEIs no mesmo valor. Como complemento executivo, o painel tambem exibe a camada estimada de ~${formatNumber(data.validation.estimated_match_total)} match e ~${formatRate(data.validation.estimated_coverage_rate)} de cobertura sobre a frota atual.`;
+        } else {
+          warning.hidden = false;
+          warning.innerHTML = `<strong>Match por IMEI x device_identification validado.</strong><br>O cruzamento atual encontrou ${formatNumber(data.matching.normalized_match_total)} matches confiaveis, com cobertura real de ${formatRate(data.kpis.coverage_rate)} sobre a frota.`;
+        }
+      }
+
+      function renderBars(targetId, items, formatter) {
+        const max = Math.max(...items.map((item) => item.value), 1);
+        document.getElementById(targetId).innerHTML = items
+          .map(
+            (item) => `
+              <div class="bar-row">
+                <div>
+                  <strong>${item.label}</strong>
+                  <div class="bar-track">
+                    <div class="bar-fill" style="width:${(item.value / max) * 100}%"></div>
+                  </div>
+                </div>
+                <div class="bar-value">${formatter(item.value)}</div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderFunnel() {
+        const view = currentView();
+        const rows = isCustomerMode()
+          ? [
+              ["Frota do Cliente", formatNumber(view.kpis.fleet_total), "base filtrada para a conta selecionada"],
+              ["Match Confirmado", formatNumber(view.kpis.matched_total), "veiculos conectados entre frota e DTC"],
+              ["Gap do Cliente", formatNumber(view.kpis.fleet_total - view.kpis.matched_total), "espaco restante para evolucao de cobertura"],
+            ]
+          : [
+              ["Frota Completa", data.kpis.fleet_total, "base com visao comercial e operacional"],
+              ["Devices DTC", data.kpis.dtc_total, "camada tecnica disponivel"],
+              [
+                "Match Confirmado",
+                formatNumber(data.validation.validated_match_total),
+                "cruzamento exato obtido com os identificadores realmente aproveitaveis",
+              ],
+            ];
+
+        document.getElementById("coverage-funnel").innerHTML = rows
+          .map(
+            ([label, value, note]) => `
+              <div class="funnel-step">
+                <div class="muted">${label}</div>
+                <span class="funnel-value">${value}</span>
+                <div>${note}</div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderHighlights() {
+        const highlights = isCustomerMode() ? currentView().highlights : data.highlights;
+        document.getElementById("highlights").innerHTML = highlights
+          .map((text) => `<div class="highlight">${text}</div>`)
+          .join("");
+      }
+
+      function renderTable(targetId, rows, columns) {
+        if (!rows.length) {
+          document.getElementById(targetId).innerHTML =
+            '<tr><td colspan="' + columns.length + '">Cruzamento indisponivel nesta importacao.</td></tr>';
+          return;
+        }
+        document.getElementById(targetId).innerHTML = rows
+          .map((row) => {
+            const cells = columns
+              .map((column) => {
+                if (column.type === "rate") {
+                  return `<td><span class="rate-pill">${formatRate(row[column.key])}</span></td>`;
+                }
+                if (column.type === "number") {
+                  return `<td>${formatNumber(row[column.key])}</td>`;
+                }
+                return `<td>${row[column.key]}</td>`;
+              })
+              .join("");
+            return `<tr>${cells}</tr>`;
+          })
+          .join("");
+      }
+
+      function renderNotes() {
+        const notes = isCustomerMode()
+          ? [
+              `O filtro esta aplicado em <strong>${activeCustomer}</strong>. Todos os numeros do topo e os recortes operacionais refletem somente essa conta.`,
+              `Cobertura atual do cliente: ${formatNumber(currentView().kpis.matched_total)} ativos com match sobre ${formatNumber(currentView().kpis.fleet_total)} veiculos.`,
+              `Para voltar a leitura completa da carteira, selecione <strong>Todos os clientes</strong> no filtro.`,
+            ]
+          : [
+              `O painel considera somente a base filtrada, sem clientes com "Gobrax", "Indimplentes", "CH -", sem cliente informado e sem os fabricantes de device excluidos.`,
+              `Cobertura atual calculada por match real entre <strong>imei</strong> e <strong>device_identification</strong>: ${formatNumber(data.validation.validated_match_total)} ativos sobre ${formatNumber(data.kpis.fleet_total)} veiculos.`,
+              `A leitura por cliente prioriza contas com volume relevante para facilitar acao comercial e operacional.`,
+            ];
+
+        document.getElementById("notes-list").innerHTML = notes
+          .map((text) => `<div class="highlight">${text}</div>`)
+          .join("");
+      }
+
+      function renderActivation() {
+        if (isCustomerMode()) {
+          document.getElementById("activation-list").innerHTML =
+            '<div class="highlight">A leitura de ativacao DTC esta disponivel apenas na visao global da carteira.</div>';
+          return;
+        }
+
+        const items = [
+          `Gap total atual: <strong>${formatNumber(data.activation.activatable_gap_total + data.activation.non_activatable_gap_total)}</strong> veiculos.`,
+          `Gap ativavel hoje: <strong>${formatNumber(data.activation.activatable_gap_total)}</strong> veiculos fora do match em devices com suporte.`,
+          `Gap bloqueado por rp4: <strong>${formatNumber(data.activation.rp4_gap_total)}</strong> veiculos.`,
+          `Dentro da frota elegivel a ativacao, a cobertura sobe para <strong>${formatRate(data.activation.eligible_coverage_rate)}</strong>.`,
+        ];
+
+        document.getElementById("activation-list").innerHTML = items
+          .map((text) => `<div class="highlight">${text}</div>`)
+          .join("");
+      }
+
+      function renderPareto() {
+        if (isCustomerMode()) {
+          document.getElementById("pareto-list").innerHTML = "";
+          return;
+        }
+        const items = [
+          `${formatNumber(data.pareto.clients_to_50_gap_pct)} clientes concentram 50% do gap total.`,
+          `${formatNumber(data.pareto.clients_to_80_gap_pct)} clientes concentram 80% do gap total.`,
+          `Maior gap atual: <strong>${data.pareto.top_gap_rows[0].customer_name}</strong> com ${formatNumber(data.pareto.top_gap_rows[0].gap)} veiculos sem match.`,
+        ];
+
+        document.getElementById("pareto-list").innerHTML = items
+          .map((text) => `<div class="highlight">${text}</div>`)
+          .join("");
+      }
+
+      function renderConcentration() {
+        if (isCustomerMode()) {
+          document.getElementById("concentration-list").innerHTML = "";
+          return;
+        }
+        const largest = data.tables.largest_customers;
+        const first = largest[0];
+        const top3 = largest.slice(0, 3).reduce((acc, item) => acc + item.fleet, 0);
+        const top10 = largest.slice(0, 10).reduce((acc, item) => acc + item.fleet, 0);
+        const items = [
+          `Maior conta atual: <strong>${first.customer_name}</strong> com ${formatNumber(first.fleet)} ativos.`,
+          `As 3 maiores contas concentram ${formatRate((top3 / data.kpis.fleet_total) * 100)} da frota.`,
+          `As 10 maiores contas concentram ${formatRate((top10 / data.kpis.fleet_total) * 100)} da base total.`,
+        ];
+
+        document.getElementById("concentration-list").innerHTML = items
+          .map((text) => `<div class="highlight">${text}</div>`)
+          .join("");
+      }
+
+      function renderDates() {
+        const startMin = formatDateTime(data.dates.vehicles_start_min);
+        const startMax = formatDateTime(data.dates.vehicles_start_max);
+        const dtcMax = formatDateTime(data.dates.dtc_connected_max);
+
+        document.getElementById("date-range").textContent =
+          `Janela da frota: ${startMin} ate ${startMax} | ultimo sinal DTC: ${dtcMax}`;
+        document.getElementById("generated-at").textContent =
+          `Atualizado em ${formatDateTime(data.generated_at)}`;
+      }
+
+      function toggleSections() {
+        const globalSections = [
+          "section-opportunity",
+          "section-pareto",
+          "section-quick-wins",
+          "section-critical",
+          "section-customer-coverage",
+          "section-customer-gap",
+          "section-largest",
+          "section-concentration",
+          "section-customer-low",
+          "section-buckets",
+        ];
+        globalSections.forEach((id) => {
+          document.getElementById(id).hidden = isCustomerMode();
+        });
+      }
+
+      function renderDashboard() {
+        const view = currentView();
+        const chartsSource = isCustomerMode() ? view.charts : data.charts;
+        const tablesSource = isCustomerMode() ? view.tables : data.tables;
+
+        toggleSections();
+        renderHero();
+        renderKpis();
+        renderBars("top-brands", chartsSource.top_brands, formatNumber);
+        renderBars("top-models", chartsSource.top_models, formatNumber);
+        renderBars("device-brands", chartsSource.device_brands, formatNumber);
+        renderFunnel();
+        renderHighlights();
+        renderTable("table-customer-brand", tablesSource.customer_brand_hotspots, [
+          { key: "customer_name" },
+          { key: "brand" },
+          { key: "fleet", type: "number" },
+          { key: "matched", type: "number" },
+          { key: "rate", type: "rate" },
+        ]);
+        renderTable("table-brand-coverage", tablesSource.brand_coverage, [
+          { key: "brand" },
+          { key: "total", type: "number" },
+          { key: "gap", type: "number" },
+          { key: "rate", type: "rate" },
+        ]);
+        renderTable("table-device-coverage", tablesSource.device_brand_coverage, [
+          { key: "brand_devices" },
+          { key: "fleet", type: "number" },
+          { key: "activatable_gap", type: "number" },
+          { key: "rate", type: "rate" },
+        ]);
+        renderTable("table-model-gap", tablesSource.models_by_gap, [
+          { key: "truckmodel" },
+          { key: "fleet", type: "number" },
+          { key: "gap", type: "number" },
+          { key: "rate", type: "rate" },
+        ]);
+
+        if (!isCustomerMode()) {
+          renderTable("table-customers", data.tables.largest_customers, [
+            { key: "customer_name" },
+            { key: "fleet", type: "number" },
+            { key: "share", type: "rate" },
+          ]);
+          renderTable("table-customer-coverage", data.tables.customers_by_coverage, [
+            { key: "customer_name" },
+            { key: "fleet", type: "number" },
+            { key: "matched", type: "number" },
+            { key: "rate", type: "rate" },
+          ]);
+          renderTable("table-customer-low", data.tables.customers_by_low_coverage, [
+            { key: "customer_name" },
+            { key: "fleet", type: "number" },
+            { key: "matched", type: "number" },
+            { key: "rate", type: "rate" },
+          ]);
+          renderTable("table-customer-gap", data.tables.customers_by_gap, [
+            { key: "customer_name" },
+            { key: "fleet", type: "number" },
+            { key: "gap", type: "number" },
+            { key: "rate", type: "rate" },
+          ]);
+          renderTable("table-opportunity", data.tables.opportunity_ranking, [
+            { key: "customer_name" },
+            { key: "gap", type: "number" },
+            { key: "rate", type: "rate" },
+            { key: "score", type: "number" },
+          ]);
+          renderTable("table-quick-wins", data.tables.quick_wins, [
+            { key: "customer_name" },
+            { key: "gap", type: "number" },
+            { key: "rate", type: "rate" },
+          ]);
+          renderTable("table-critical-cases", data.tables.critical_cases, [
+            { key: "customer_name" },
+            { key: "gap", type: "number" },
+            { key: "rate", type: "rate" },
+          ]);
+          renderTable("table-buckets", data.tables.fleet_size_buckets, [
+            { key: "label" },
+            { key: "clients", type: "number" },
+            { key: "fleet", type: "number" },
+            { key: "matched", type: "number" },
+            { key: "rate", type: "rate" },
+          ]);
+        }
+
+        renderConcentration();
+        renderPareto();
+        renderActivation();
+        renderNotes();
+        renderDates();
+      }
+
+      renderFilter();
+      renderDashboard();
+    </script>
+  </body>
+</html>

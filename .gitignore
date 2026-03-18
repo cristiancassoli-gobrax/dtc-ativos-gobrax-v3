@@ -1,0 +1,8 @@
+.DS_Store
+*.csv
+dashboard_data.json
+dashboard_data.js
+dashboard_data_validation.txt
+dashboard-standalone.html
+__pycache__/
+
