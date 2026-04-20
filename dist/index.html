@@ -548,10 +548,145 @@
           flex-direction: column;
         }
       }
+
+
+      /* ── Login overlay ── */
+      #login-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(circle at top left, rgba(255, 211, 28, 0.28), transparent 30%),
+          radial-gradient(circle at right 10%, rgba(24, 91, 107, 0.12), transparent 20%),
+          linear-gradient(180deg, #f8f6f1 0%, #f5f3ee 100%);
+      }
+
+      #login-card {
+        width: min(420px, calc(100vw - 40px));
+        padding: 48px 40px 40px;
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(17, 17, 17, 0.06);
+        box-shadow: 0 24px 80px rgba(17, 17, 17, 0.1);
+        backdrop-filter: blur(20px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+
+      #login-card img.login-logo {
+        height: 36px;
+        margin-bottom: 28px;
+      }
+
+      #login-card h2 {
+        font-family: "Montserrat", sans-serif;
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin: 0 0 6px;
+        text-align: center;
+        color: #111111;
+      }
+
+      #login-card p.login-sub {
+        margin: 0 0 32px;
+        font-size: 0.875rem;
+        color: #5f5f5f;
+        text-align: center;
+      }
+
+      #login-form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .login-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .login-field label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #5f5f5f;
+      }
+
+      .login-field input {
+        padding: 13px 16px;
+        border-radius: 12px;
+        border: 1.5px solid rgba(17, 17, 17, 0.14);
+        font-family: "Manrope", sans-serif;
+        font-size: 0.95rem;
+        background: #fafaf8;
+        color: #111111;
+        outline: none;
+        transition: border-color 0.18s;
+      }
+
+      .login-field input:focus {
+        border-color: #ffd31c;
+        background: #ffffff;
+      }
+
+      #login-error {
+        font-size: 0.82rem;
+        color: #c0392b;
+        text-align: center;
+        min-height: 18px;
+        margin-top: -4px;
+      }
+
+      #login-btn {
+        margin-top: 6px;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        background: #ffd31c;
+        color: #111111;
+        font-family: "Montserrat", sans-serif;
+        font-size: 0.95rem;
+        font-weight: 800;
+        cursor: pointer;
+        letter-spacing: 0.04em;
+        transition: background 0.18s, transform 0.12s;
+      }
+
+      #login-btn:hover { background: #e6bc16; }
+      #login-btn:active { transform: scale(0.98); }
     </style>
   </head>
   <body>
-    <main class="shell">
+    <!-- Login overlay -->
+    <div id="login-overlay">
+      <div id="login-card">
+        <img class="login-logo" src="https://manutencao.gobrax.com.br/imgs/gobrax.svg" alt="Gobrax" />
+        <h2>DTC Ativos</h2>
+        <p class="login-sub">Acesse o dashboard com suas credenciais</p>
+        <form id="login-form" autocomplete="off">
+          <div class="login-field">
+            <label for="login-user">Usuário</label>
+            <input id="login-user" type="text" placeholder="Usuário" autocomplete="username" />
+          </div>
+          <div class="login-field">
+            <label for="login-pass">Senha</label>
+            <input id="login-pass" type="password" placeholder="Senha" autocomplete="current-password" />
+          </div>
+          <div id="login-error"></div>
+          <button id="login-btn" type="submit">Entrar</button>
+        </form>
+      </div>
+    </div>
+
+    <main class="shell" id="main-content" style="display:none">
       <section class="hero">
         <div class="hero-head">
           <div class="title-block">
@@ -1447,6 +1582,50 @@
 
       renderFilter();
       renderDashboard();
+    </script>
+
+    <script>
+      (function () {
+        const SESSION_KEY = "dtc_auth";
+        const CRED_HASH = "9f4e9a1b8c3d2e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3";
+
+        async function sha256(str) {
+          const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        async function checkAuth() {
+          if (sessionStorage.getItem(SESSION_KEY) === "1") {
+            showDashboard();
+            return;
+          }
+          document.getElementById("login-overlay").style.display = "flex";
+        }
+
+        function showDashboard() {
+          document.getElementById("login-overlay").style.display = "none";
+          document.getElementById("main-content").style.display = "";
+        }
+
+        document.getElementById("login-form").addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const user = document.getElementById("login-user").value.trim();
+          const pass = document.getElementById("login-pass").value;
+          const combined = user + ":" + pass;
+          const hash = await sha256(combined);
+          const expectedHash = await sha256("Gobrax:Gobrax2026DTC*");
+          if (hash === expectedHash) {
+            sessionStorage.setItem(SESSION_KEY, "1");
+            showDashboard();
+          } else {
+            const err = document.getElementById("login-error");
+            err.textContent = "Usuário ou senha incorretos.";
+            document.getElementById("login-pass").value = "";
+          }
+        });
+
+        checkAuth();
+      })();
     </script>
   </body>
 </html>
