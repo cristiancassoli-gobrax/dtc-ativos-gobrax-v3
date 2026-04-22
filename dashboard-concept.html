@@ -282,6 +282,28 @@
         color: var(--muted);
       }
 
+      .export-btn {
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--line-strong);
+        background: var(--panel);
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--ink);
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .export-btn:hover {
+        background: var(--accent);
+        border-color: var(--accent-deep);
+      }
+
       .kpi-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -626,6 +648,34 @@
               <div class="bar-list" id="top-models"></div>
             </div>
           </div>
+        </div>
+
+        <div class="card table-card span-12" id="section-potential-30-dtc">
+          <div class="section-title">
+            <div>
+              <h2>Top 30 Potenciais Para DTC</h2>
+              <p>
+                Clientes com maior potencial em volume absoluto, desconsiderando veículos da Mercedes e/ou dispositivos RP4, que possuem dificuldades no momento.
+              </p>
+            </div>
+            <a href="./top_30_potenciais_dtc.csv" class="export-btn" style="text-decoration:none;" download="top_30_potenciais_dtc.csv">
+              Exportar CSV
+            </a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Frota Total</th>
+                <th>Gap Ideal (Alvo)</th>
+                <th>Gap Inválido (Geral)</th>
+                <th>Veículos RP4</th>
+                <th>Veículos Mercedes</th>
+                <th>Cobertura Atual</th>
+              </tr>
+            </thead>
+            <tbody id="table-potential-30-dtc"></tbody>
+          </table>
         </div>
 
         <div class="card table-card span-6" id="section-opportunity">
@@ -1334,6 +1384,7 @@
 
       function toggleSections() {
         const globalSections = [
+          "section-potential-30-dtc",
           "section-opportunity",
           "section-pareto",
           "section-quick-wins",
@@ -1412,6 +1463,15 @@
             { key: "fleet", type: "number" },
             { key: "gap", type: "number" },
             { key: "rate", type: "rate" },
+          ]);
+          renderTable("table-potential-30-dtc", data.tables.potential_30_clients_dtc, [
+            { key: "customer_name" },
+            { key: "fleet", type: "number" },
+            { key: "activatable_ideal_gap", type: "number" },
+            { key: "non_ideal_gap", type: "number" },
+            { key: "rp4_total", type: "number" },
+            { key: "mercedes_total", type: "number" },
+            { key: "coverage", type: "rate" },
           ]);
           renderTable("table-opportunity", data.tables.opportunity_ranking, [
             { key: "customer_name" },

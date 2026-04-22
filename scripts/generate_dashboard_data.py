@@ -12,6 +12,7 @@ DTC_CSV = ROOT / "Veiculos_v3 - base_dtc.csv"
 VEHICLES_CSV = ROOT / "Veiculos_v3 - base_veiculos.csv"
 OUTPUT_JSON = ROOT / "dashboard_data.json"
 OUTPUT_JS = ROOT / "dashboard_data.js"
+OUTPUT_CSV_TOP30 = ROOT / "top_30_potenciais_dtc.csv"
 VALIDATION_REPORT = ROOT / "dashboard_data_validation.txt"
 LAST_TRUSTED_MATCH_SNAPSHOT = {
     "matched_total": 4338,
@@ -472,12 +473,20 @@ def main() -> None:
             }
         )
     top_customers = vehicles["customer_name"].fillna("Nao informado").value_counts()
+    merged["ideal_dtc_eligibility"] = (
+        (~merged["brand"].fillna("").astype(str).str.strip().str.lower().str.contains("mercedes", na=False))
+        & (merged["brand_devices"].fillna("").astype(str).str.strip().str.lower() != "rp4")
+    )
+    merged["is_rp4"] = (merged["brand_devices"].fillna("").astype(str).str.strip().str.lower() == "rp4")
+    merged["is_mercedes"] = merged["brand"].fillna("").astype(str).str.strip().str.lower().str.contains("mercedes", na=False)
     customer_activation = (
         merged.groupby("customer_name")
         .agg(
             total=("vehicle_id", "count"),
             matched=("matched", "sum"),
             eligible=("eligible_dtc_activation", "sum"),
+            rp4_total=("is_rp4", "sum"),
+            mercedes_total=("is_mercedes", "sum"),
         )
         .sort_values("total", ascending=False)
     )
@@ -489,6 +498,16 @@ def main() -> None:
     )
     customer_activation["non_activatable_gap"] = (
         ((~merged["matched"]) & (~merged["eligible_dtc_activation"]))
+        .groupby(merged["customer_name"])
+        .sum()
+    )
+    customer_activation["activatable_ideal_gap"] = (
+        ((~merged["matched"]) & (merged["ideal_dtc_eligibility"]))
+        .groupby(merged["customer_name"])
+        .sum()
+    )
+    customer_activation["non_ideal_gap"] = (
+        ((~merged["matched"]) & (~merged["ideal_dtc_eligibility"]))
         .groupby(merged["customer_name"])
         .sum()
     )
@@ -781,6 +800,22 @@ def main() -> None:
                 .head(12)
                 .iterrows()
             ],
+            "potential_30_clients_dtc": [
+                {
+                    "customer_name": index,
+                    "fleet": int(row["total"]),
+                    "activatable_ideal_gap": int(row["activatable_ideal_gap"]),
+                    "rp4_total": int(row["rp4_total"]),
+                    "mercedes_total": int(row["mercedes_total"]),
+                    "non_ideal_gap": int(row["non_ideal_gap"]),
+                    "coverage": float(row["coverage"]),
+                }
+                for index, row in customer_activation.sort_values(
+                    ["activatable_ideal_gap", "gap"], ascending=[False, False]
+                )
+                .head(30)
+                .iterrows()
+            ],
         },
         "pareto": {
             "clients_to_50_gap_pct": clients_to_50,
@@ -818,6 +853,23 @@ def main() -> None:
     json_payload = json.dumps(payload, ensure_ascii=True, indent=2)
     OUTPUT_JSON.write_text(json_payload)
     OUTPUT_JS.write_text(f"window.DASHBOARD_DATA = {json_payload};\n")
+
+    top_30_data = [
+        {
+            "Cliente": row["customer_name"],
+            "Frota Total": int(row["fleet"]),
+            "Gap Ideal (Alvo)": int(row["activatable_ideal_gap"]),
+            "Gap Invalido (Geral)": int(row["non_ideal_gap"]),
+            "Veiculos RP4": int(row["rp4_total"]),
+            "Veiculos Mercedes": int(row["mercedes_total"]),
+            "Cobertura Atual (%)": f"{float(row['coverage']):.2f}".replace('.', ',') + "%"
+        }
+        for row in payload["tables"]["potential_30_clients_dtc"]
+    ]
+    if top_30_data:
+        pd.DataFrame(top_30_data).to_csv(OUTPUT_CSV_TOP30, index=False, sep=";", encoding="utf-8-sig")
+        print(f"Top 30 CSV written to {OUTPUT_CSV_TOP30}")
+
     write_validation_report("OK: arquivos validados e dashboard_data gerado com sucesso.")
     print(f"Dashboard data written to {OUTPUT_JSON}")
     print(f"Dashboard script written to {OUTPUT_JS}")
