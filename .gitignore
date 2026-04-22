@@ -6,3 +6,10 @@ dashboard_data_validation.txt
 dashboard-standalone.html
 __pycache__/
 
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
