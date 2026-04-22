@@ -590,6 +590,8 @@
             <label for="customer-filter">Filtro por cliente</label>
             <input id="customer-search" type="search" placeholder="Buscar cliente" />
             <select id="customer-filter"></select>
+            <label for="brand-filter" style="margin-top:8px">Filtro por marca</label>
+            <select id="brand-filter"></select>
           </div>
         </div>
         <div class="hero-controls">
@@ -1026,6 +1028,7 @@
     <script>
       const data = window.DASHBOARD_DATA;
       let activeCustomer = "";
+      let activeBrand = "";
       let customerSearchTerm = "";
 
       function formatNumber(value) {
@@ -1056,8 +1059,16 @@
         return activeCustomer ? data.customer_views[activeCustomer] : null;
       }
 
+      function currentBrandView() {
+        return activeBrand ? data.brand_views[activeBrand] : null;
+      }
+
       function isCustomerMode() {
         return !!activeCustomer;
+      }
+
+      function isBrandMode() {
+        return !!activeBrand;
       }
 
       function renderFilter() {
@@ -1079,6 +1090,18 @@
 
         select.onchange = (event) => {
           activeCustomer = event.target.value;
+          renderDashboard();
+        };
+      }
+
+      function renderBrandFilter() {
+        const select = document.getElementById("brand-filter");
+        const options = ['<option value="">Todas as marcas</option>']
+          .concat((data.filters.brands || []).map((b) => `<option value="${b}">${b}</option>`));
+        select.innerHTML = options.join("");
+        select.value = activeBrand;
+        select.onchange = (event) => {
+          activeBrand = event.target.value;
           renderDashboard();
         };
       }
@@ -1146,6 +1169,7 @@
 
       function renderKpis() {
         const view = currentView();
+        const bview = currentBrandView();
         const cards = isCustomerMode()
           ? [
               {
@@ -1167,6 +1191,29 @@
                 label: "Cobertura Atual",
                 value: formatRate(view.kpis.coverage_rate),
                 note: "percentual de match no cliente filtrado",
+              },
+            ]
+          : isBrandMode()
+          ? [
+              {
+                label: "Frota da Marca",
+                value: formatNumber(bview.fleet_total),
+                note: `veiculos ${activeBrand} na base filtrada`,
+              },
+              {
+                label: "Match Confirmado",
+                value: formatNumber(bview.matched_total),
+                note: "cruzamento real entre imei e device_identification",
+              },
+              {
+                label: "Gap da Marca",
+                value: formatNumber(bview.gap_total),
+                note: `veiculos ${activeBrand} fora do match`,
+              },
+              {
+                label: "Cobertura Atual",
+                value: formatRate(bview.coverage_rate),
+                note: "percentual de match para esta marca",
               },
             ]
           : [
@@ -1208,6 +1255,10 @@
         if (isCustomerMode()) {
           warning.hidden = false;
           warning.innerHTML = `<strong>Filtro por cliente ativo.</strong><br>O painel esta exibindo somente os dados de <strong>${activeCustomer}</strong>. Os blocos comparativos entre clientes foram ocultados para manter a leitura focada.`;
+        } else if (isBrandMode()) {
+          warning.hidden = false;
+          const bv = currentBrandView();
+          warning.innerHTML = `<strong>Filtro por marca ativo: ${activeBrand}.</strong><br>Mostrando ${formatNumber(bv.fleet_total)} veiculos desta marca em ${formatNumber(bv.customers.length)} clientes. Gap atual: ${formatNumber(bv.gap_total)} veiculos (${formatRate(bv.coverage_rate)} de cobertura).`;
         } else if (!data.matching.reliable) {
           warning.hidden = false;
           warning.innerHTML = `<strong>Match por IMEI x device_identification.</strong><br>${data.matching.message} No cruzamento direto, o painel encontrou ${formatNumber(data.matching.direct_match_total)} match exato e ${formatNumber(data.matching.normalized_match_total)} apos normalizacao. Existe overlap em ${formatNumber(data.matching.signature_overlap_total)} linhas por assinatura cientifica, mas ele e ambiguo porque a exportacao colapsou muitos IMEIs no mesmo valor. Como complemento executivo, o painel tambem exibe a camada estimada de ~${formatNumber(data.validation.estimated_match_total)} match e ~${formatRate(data.validation.estimated_coverage_rate)} de cobertura sobre a frota atual.`;
@@ -1397,31 +1448,45 @@
           "section-buckets",
         ];
         globalSections.forEach((id) => {
-          document.getElementById(id).hidden = isCustomerMode();
+          document.getElementById(id).hidden = isCustomerMode() || isBrandMode();
         });
       }
 
       function renderDashboard() {
         const view = currentView();
+        const bview = currentBrandView();
         const chartsSource = isCustomerMode() ? view.charts : data.charts;
         const tablesSource = isCustomerMode() ? view.tables : data.tables;
 
         toggleSections();
         renderHero();
         renderKpis();
-        renderBars("top-brands", chartsSource.top_brands, formatNumber);
+
+        if (isBrandMode() && !isCustomerMode()) {
+          renderBars("top-brands", [{ label: activeBrand, value: bview.fleet_total }], formatNumber);
+        } else {
+          renderBars("top-brands", chartsSource.top_brands, formatNumber);
+        }
         renderBars("top-models", chartsSource.top_models, formatNumber);
         renderBars("device-brands", chartsSource.device_brands, formatNumber);
         renderFunnel();
         renderHighlights();
-        renderTable("table-customer-brand", tablesSource.customer_brand_hotspots, [
+
+        const customerBrandRows = isBrandMode() && !isCustomerMode()
+          ? bview.customers.map((c) => ({ customer_name: c.customer_name, brand: activeBrand, fleet: c.fleet, matched: c.matched, rate: c.rate }))
+          : tablesSource.customer_brand_hotspots;
+        renderTable("table-customer-brand", customerBrandRows, [
           { key: "customer_name" },
           { key: "brand" },
           { key: "fleet", type: "number" },
           { key: "matched", type: "number" },
           { key: "rate", type: "rate" },
         ]);
-        renderTable("table-brand-coverage", tablesSource.brand_coverage, [
+
+        const brandCoverageRows = isBrandMode() && !isCustomerMode()
+          ? tablesSource.brand_coverage.filter((r) => r.brand === activeBrand)
+          : tablesSource.brand_coverage;
+        renderTable("table-brand-coverage", brandCoverageRows, [
           { key: "brand" },
           { key: "total", type: "number" },
           { key: "gap", type: "number" },
@@ -1506,6 +1571,7 @@
       }
 
       renderFilter();
+      renderBrandFilter();
       renderDashboard();
     </script>
   </body>

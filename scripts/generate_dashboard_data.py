@@ -524,6 +524,37 @@ def main() -> None:
             continue
         customer_views[str(customer_name)] = summarize_customer_view(group.copy())
 
+    brand_views = {}
+    for brand_name, group in merged.groupby("brand", sort=True):
+        if pd.isna(brand_name):
+            continue
+        brand_fleet = int(len(group))
+        brand_matched = int(group["matched"].sum())
+        brand_gap = brand_fleet - brand_matched
+        cust_brand = (
+            group.groupby("customer_name")
+            .agg(total=("vehicle_id", "count"), matched=("matched", "sum"))
+            .sort_values(["total", "matched"], ascending=[False, False])
+        )
+        cust_brand["gap"] = cust_brand["total"] - cust_brand["matched"]
+        cust_brand["rate"] = (cust_brand["matched"] / cust_brand["total"] * 100).round(2)
+        brand_views[str(brand_name)] = {
+            "fleet_total": brand_fleet,
+            "matched_total": brand_matched,
+            "gap_total": brand_gap,
+            "coverage_rate": rounded_rate(brand_matched, brand_fleet),
+            "customers": [
+                {
+                    "customer_name": str(idx),
+                    "fleet": int(row["total"]),
+                    "matched": int(row["matched"]),
+                    "gap": int(row["gap"]),
+                    "rate": float(row["rate"]),
+                }
+                for idx, row in cust_brand.iterrows()
+            ],
+        }
+
     payload = {
         "generated_at": pd.Timestamp.now(tz="America/Sao_Paulo").isoformat(),
         "source_files": [DTC_CSV.name, VEHICLES_CSV.name],
@@ -600,6 +631,7 @@ def main() -> None:
         },
         "filters": {
             "customers": sorted(customer_views.keys()),
+            "brands": sorted(brand_views.keys()),
         },
         "charts": {
             "fleet_growth": monthly_records(vehicles["start_date"], limit=10),
@@ -848,6 +880,7 @@ def main() -> None:
             "Hoje devices rp4 nao possuem suporte a ativacao DTC, entao parte do gap atual nao e ativavel no cenario de hoje.",
         ],
         "customer_views": customer_views,
+        "brand_views": brand_views,
     }
 
     json_payload = json.dumps(payload, ensure_ascii=True, indent=2)
